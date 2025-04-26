@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}API Test | Video Sharing Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>API Test</h1>
+        <p class="lead">Test the REST API endpoints using JavaScript fetch API.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Get Token</h5>
+            </div>
+            <div class="card-body">
+                <form id="token-form" class="mb-3">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Get Token</button>
+                </form>
+                <div id="token-result" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Test GET /api/media/</h5>
+            </div>
+            <div class="card-body">
+                <button id="get-media-btn" class="btn btn-primary">Fetch Media</button>
+                <div id="get-media-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Test POST /api/comments/</h5>
+            </div>
+            <div class="card-body">
+                <form id="comment-form" class="mb-3">
+                    <div class="mb-3">
+                        <label for="media-id" class="form-label">Media ID</label>
+                        <input type="number" class="form-control" id="media-id" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment-text" class="form-label">Comment</label>
+                        <textarea class="form-control" id="comment-text" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                </form>
+                <div id="comment-result" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Test POST /api/ratings/</h5>
+            </div>
+            <div class="card-body">
+                <form id="rating-form" class="mb-3">
+                    <div class="mb-3">
+                        <label for="rating-media-id" class="form-label">Media ID</label>
+                        <input type="number" class="form-control" id="rating-media-id" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rating-score" class="form-label">Score (1-5)</label>
+                        <select class="form-select" id="rating-score" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Rating</button>
+                </form>
+                <div id="rating-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Store the token
+    let authToken = '';
+    
+    // Show a result in a div
+    function showResult(elementId, data, isError = false) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<pre class="${isError ? 'text-danger' : 'text-success'}">${JSON.stringify(data, null, 2)}</pre>`;
+    }
+    
+    // Token form submission
+    document.getElementById('token-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            const response = await fetch('/api-token-auth/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                authToken = data.token;
+                showResult('token-result', { message: 'Token obtained successfully', token: data.token });
+            } else {
+                showResult('token-result', data, true);
+            }
+        } catch (error) {
+            showResult('token-result', { error: error.message }, true);
+        }
+    });
+    
+    // GET media list
+    document.getElementById('get-media-btn').addEventListener('click', async function() {
+        try {
+            const response = await fetch('/api/media/');
+            const data = await response.json();
+            showResult('get-media-result', data);
+        } catch (error) {
+            showResult('get-media-result', { error: error.message }, true);
+        }
+    });
+    
+    // POST comment
+    document.getElementById('comment-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!authToken) {
+            showResult('comment-result', { error: 'You need to get a token first' }, true);
+            return;
+        }
+        
+        const mediaId = document.getElementById('media-id').value;
+        const text = document.getElementById('comment-text').value;
+        
+        try {
+            const response = await fetch('/api/comments/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${authToken}`,
+                },
+                body: JSON.stringify({ media_id: mediaId, text }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showResult('comment-result', data);
+            } else {
+                showResult('comment-result', data, true);
+            }
+        } catch (error) {
+            showResult('comment-result', { error: error.message }, true);
+        }
+    });
+    
+    // POST rating
+    document.getElementById('rating-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!authToken) {
+            showResult('rating-result', { error: 'You need to get a token first' }, true);
+            return;
+        }
+        
+        const mediaId = document.getElementById('rating-media-id').value;
+        const score = document.getElementById('rating-score').value;
+        
+        try {
+            const response = await fetch('/api/ratings/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${authToken}`,
+                },
+                body: JSON.stringify({ media_id: mediaId, score }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showResult('rating-result', data);
+            } else {
+                showResult('rating-result', data, true);
+            }
+        } catch (error) {
+            showResult('rating-result', { error: error.message }, true);
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Content | Video Sharing Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Upload Media Content</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">Media File</label>
+                        {{ form.file.errors }}
+                        {{ form.file }}
+                        {% if form.file.help_text %}
+                        <div class="form-text">{{ form.file.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                        {{ form.title.errors }}
+                        {{ form.title }}
+                        {% if form.title.help_text %}
+                        <div class="form-text">{{ form.title.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.caption.id_for_label }}" class="form-label">Caption (optional)</label>
+                        {{ form.caption.errors }}
+                        {{ form.caption }}
+                        <div class="form-text">Describe your media in detail (up to 500 characters).</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">Location (optional)</label>
+                        {{ form.location.errors }}
+                        {{ form.location }}
+                        <div class="form-text">Where was this media captured?</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.people_present.id_for_label }}" class="form-label">People Present (optional)</label>
+                        {{ form.people_present.errors }}
+                        {{ form.people_present }}
+                        <div class="form-text">List the people who appear in this media.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

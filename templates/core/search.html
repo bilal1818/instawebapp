@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load media_filters %}
+
+{% block title %}Search Media | Video Sharing Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-header {
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        color: white;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .search-form {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .search-input {
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    }
+    
+    .search-button {
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .media-card {
+        overflow: hidden;
+        border-radius: 10px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+    
+    .media-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .media-thumbnail {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .media-stats {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .media-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+    
+    .results-count {
+        background-color: rgba(52, 152, 219, 0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-header text-center">
+    <div class="container">
+        <h1 class="fw-bold mb-4"><i class="fas fa-search"></i> Search Media</h1>
+        
+        <div class="search-form">
+            <form method="get" class="row g-3">
+                <div class="col-md-9">
+                    <input type="text" name="query" class="form-control search-input" 
+                           placeholder="Search by title, caption, or location" value="{{ query }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-light search-button w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if query %}
+        {% if results %}
+            <div class="results-count d-flex justify-content-between align-items-center">
+                <h2 class="mb-0 fs-4">Results for "{{ query }}"</h2>
+                <span class="badge bg-primary">{{ results.paginator.count }} result{{ results.paginator.count|pluralize }}</span>
+            </div>
+            
+            <div class="row">
+                {% for item in results %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card media-card">
+                            <div class="position-relative">
+                                {% if item.file.url|is_video %}
+                                    <span class="media-badge badge bg-danger">Video</span>
+                                    <video class="media-thumbnail" controls>
+                                        <source src="{{ item.file.url }}" type="video/{{ item.file.url|file_extension }}">
+                                        Your browser does not support video playback.
+                                    </video>
+                                {% else %}
+                                    <span class="media-badge badge bg-success">Photo</span>
+                                    <img src="{{ item.file.url }}" class="media-thumbnail" alt="{{ item.title }}">
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ item.title }}</h5>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-user"></i> {{ item.creator.username }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> {{ item.upload_date|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                                
+                                <div class="media-stats d-flex justify-content-between mb-3">
+                                    <span><i class="fas fa-heart text-danger"></i> {{ item.likes.count }}</span>
+                                    <span><i class="fas fa-comment text-primary"></i> {{ item.comments.count }}</span>
+                                    <span><i class="fas fa-star text-warning"></i> 
+                                        {% if item.ratings.count > 0 %}
+                                            {{ item.ratings.all|length|default:0 }}
+                                        {% else %}
+                                            0
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <a href="{% url 'core:media_detail' pk=item.pk %}" class="btn btn-primary w-100">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if results.has_other_pages %}
+                <nav aria-label="Page navigation" class="my-4">
+                    <ul class="pagination justify-content-center">
+                        {% if results.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?query={{ query }}&page={{ results.previous_page_number }}" aria-label="Previous">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in results.paginator.page_range %}
+                            {% if results.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?query={{ query }}&page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if results.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?query={{ query }}&page={{ results.next_page_number }}" aria-label="Next">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No results found for "{{ query }}". Try a different search term.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="text-center my-5">
+            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+            <h3>Enter a search term to find media</h3>
+            <p class="text-muted">Search by title, caption, or location</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

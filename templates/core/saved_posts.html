@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load media_filters %}
+
+{% block title %}Saved Posts - Video Sharing Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .saved-header {
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        color: white;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .saved-card {
+        overflow: hidden;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .saved-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .category-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 10;
+    }
+    
+    .saved-thumbnail {
+        height: 200px;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="saved-header text-center">
+    <div class="container">
+        <h1 class="mb-2"><i class="fas fa-bookmark"></i> Saved Posts</h1>
+        <p class="lead">Your collection of saved videos and photos</p>
+    </div>
+</div>
+
+<div class="container">
+    {% if saved_posts %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for saved in saved_posts %}
+                <div class="col">
+                    <div class="card saved-card h-100">
+                        <div class="position-relative overflow-hidden">
+                            {% if saved.media.file.url|is_video %}
+                                <span class="category-badge badge bg-danger">Video</span>
+                                <video class="saved-thumbnail card-img-top" controls>
+                                    <source src="{{ saved.media.file.url }}" type="video/{{ saved.media.file.url|file_extension }}">
+                                    Your browser does not support video playback.
+                                </video>
+                            {% else %}
+                                <span class="category-badge badge bg-success">Photo</span>
+                                <img src="{{ saved.media.file.url }}" class="saved-thumbnail card-img-top" alt="{{ saved.media.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ saved.media.title }}</h5>
+                            {% if saved.media.caption %}
+                                <p class="card-text text-muted">{{ saved.media.caption|truncatewords:20 }}</p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-user"></i> {{ saved.media.creator.username }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ saved.media.upload_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-heart text-danger"></i> {{ saved.media.likes.count }}
+                                    </span>
+                                    <span class="badge bg-light text-dark ms-1">
+                                        <i class="fas fa-comment text-primary"></i> {{ saved.media.comments.count }}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    Saved {{ saved.saved_at|timesince }} ago
+                                </small>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <a href="{% url 'core:media_detail' saved.media.pk %}" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <form method="post" action="{% url 'core:toggle_save' saved.media.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        <i class="fas fa-bookmark"></i> Unsave
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if saved_posts.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if saved_posts.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ saved_posts.previous_page_number }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in saved_posts.paginator.page_range %}
+                        <li class="page-item {% if saved_posts.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if saved_posts.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ saved_posts.next_page_number }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
+            <h3>No saved posts yet</h3>
+            <p class="text-muted">Start saving posts to build your collection</p>
+            <a href="{% url 'core:media_list' %}" class="btn btn-primary mt-3">Explore Content</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

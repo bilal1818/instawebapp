@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load media_filters %}
+
+{% block title %}Browse Media | Video Sharing Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gallery-header {
+        padding: 2rem 0;
+        background: rgba(52, 152, 219, 0.05);
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .media-card {
+        overflow: hidden;
+        border-radius: 10px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+    
+    .media-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .media-thumbnail {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .media-card .card-body {
+        padding: 1.25rem;
+    }
+    
+    .media-stats {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .media-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+    
+    .filter-bar {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gallery-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="fw-bold"><i class="fas fa-images"></i> Media Gallery</h1>
+                <p class="text-muted">Discover amazing videos and photos from our community</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:media_search' %}" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Search Media
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if media %}
+        <div class="row">
+            {% for item in media %}
+                <div class="col-md-4 mb-4">
+                    <div class="card media-card">
+                        <div class="position-relative">
+                            {% if item.file.url|is_video %}
+                                <span class="media-badge badge bg-danger">Video</span>
+                                <video class="media-thumbnail" controls>
+                                    <source src="{{ item.file.url }}" type="video/{{ item.file.url|file_extension }}">
+                                    Your browser does not support video playback.
+                                </video>
+                            {% else %}
+                                <span class="media-badge badge bg-success">Photo</span>
+                                <img src="{{ item.file.url }}" class="media-thumbnail" alt="{{ item.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.title }}</h5>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-user"></i> {{ item.creator.username }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ item.upload_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            
+                            <div class="media-stats d-flex justify-content-between mb-3">
+                                <span><i class="fas fa-heart text-danger"></i> {{ item.likes.count }}</span>
+                                <span><i class="fas fa-comment text-primary"></i> {{ item.comments.count }}</span>
+                                <span><i class="fas fa-star text-warning"></i> 
+                                    {% if item.ratings.count > 0 %}
+                                        {{ item.ratings.all|length|default:0 }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <a href="{% url 'core:media_detail' pk=item.pk %}" class="btn btn-primary w-100">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if media.has_other_pages %}
+            <nav aria-label="Page navigation" class="my-4">
+                <ul class="pagination justify-content-center">
+                    {% if media.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ media.previous_page_number }}" aria-label="Previous">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in media.paginator.page_range %}
+                        {% if media.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if media.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ media.next_page_number }}" aria-label="Next">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No media content available yet. Check back soon!
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

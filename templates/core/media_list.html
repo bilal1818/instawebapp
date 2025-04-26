@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Media - Video Sharing Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .media-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .filter-section {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .media-card {
+        height: 100%;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .media-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .media-card .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .media-card .card-body {
+        padding: 1.25rem;
+    }
+    
+    .media-card .badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 50px;
+    }
+    
+    .creator-info {
+        display: flex;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+    
+    .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 0.75rem;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .media-meta {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-light);
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        padding-top: 0.75rem;
+    }
+    
+    .media-actions {
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        right: 0;
+        background-color: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: space-around;
+        padding: 0.75rem;
+        transition: all 0.3s;
+    }
+    
+    .media-card:hover .media-actions {
+        bottom: 0;
+    }
+    
+    .media-actions a {
+        color: white;
+        text-decoration: none;
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="media-header">
+    <div class="container">
+        <h1 class="display-5 fw-bold">Discover Amazing Content</h1>
+        <p class="lead">Browse through our collection of high-quality videos and images</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filters Section -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="media_type" class="form-label">Media Type</label>
+                <select name="media_type" id="media_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="video" {% if request.GET.media_type == 'video' %}selected{% endif %}>Videos</option>
+                    <option value="image" {% if request.GET.media_type == 'image' %}selected{% endif %}>Images</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="category" class="form-label">Category</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:'i' %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="sort_by" class="form-label">Sort By</label>
+                <select name="sort_by" id="sort_by" class="form-select">
+                    <option value="newest" {% if request.GET.sort_by == 'newest' or not request.GET.sort_by %}selected{% endif %}>Newest First</option>
+                    <option value="oldest" {% if request.GET.sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                    <option value="popular" {% if request.GET.sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{% url 'core:media_list' %}" class="btn btn-outline-secondary ms-2">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Media List -->
+    {% if media_list %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for media in media_list %}
+        <div class="col">
+            <div class="card media-card h-100">
+                {% if media.media_type == 'image' %}
+                    <img src="{{ media.file.url }}" class="card-img-top" alt="{{ media.title }}">
+                    <span class="badge bg-info">Image</span>
+                {% else %}
+                    <img src="{{ media.thumbnail.url }}" class="card-img-top" alt="{{ media.title }}">
+                    <span class="badge bg-danger">Video</span>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ media.title }}</h5>
+                    
+                    <div class="creator-info">
+                        <div class="avatar">{{ media.creator.username|first|upper }}</div>
+                        <div>{{ media.creator.username }}</div>
+                    </div>
+                    
+                    <p class="card-text mt-2">{{ media.description|truncatechars:100 }}</p>
+                    
+                    <div class="media-meta">
+                        <span><i class="fas fa-calendar-alt me-1"></i>{{ media.created_at|date:"M d, Y" }}</span>
+                        <span><i class="fas fa-eye me-1"></i>{{ media.views }}</span>
+                        <span><i class="fas fa-heart me-1"></i>{{ media.likes }}</span>
+                    </div>
+                </div>
+                
+                <div class="media-actions">
+                    <a href="{% url 'core:media_detail' media.id %}" title="View">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'core:toggle_like' media.id %}" title="Like">
+                        <i class="fas fa-heart"></i>
+                    </a>
+                    <a href="{% url 'core:toggle_save' media.id %}" title="Save">
+                        <i class="fas fa-bookmark"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="d-flex justify-content-center">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.media_type %}&media_type={{ request.GET.media_type }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.media_type %}&media_type={{ request.GET.media_type }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.media_type %}&media_type={{ request.GET.media_type }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.media_type %}&media_type={{ request.GET.media_type }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.media_type %}&media_type={{ request.GET.media_type }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="no-results">
+        <i class="fas fa-search fa-3x mb-3"></i>
+        <h3>No media found matching your criteria</h3>
+        <p class="text-muted">Try adjusting your filters or <a href="{% url 'core:media_list' %}">view all media</a></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 
