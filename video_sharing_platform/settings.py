@@ -26,11 +26,18 @@ SECRET_KEY = 'django-insecure-6+9rb5gzl7v3djfjrikb5@)%er=p=7w5fd-htp#bb6v9)pqkb$
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "https://instawebapplication-bhewaab3dphsbzh8.ukwest-01.azurewebsites.net",
     "instawebapplication-bhewaab3dphsbzh8.ukwest-01.azurewebsites.net",
-    "*"
+    "instawebapp-dvf3cxeyb6aaaah6.ukwest-01.azurewebsites.net",  # Adding the domain from the error
+    "localhost",
+    "127.0.0.1",
+    "*" 
 ]
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://instawebapplication-bhewaab3dphsbzh8.ukwest-01.azurewebsites.net",
+    "https://instawebapp-dvf3cxeyb6aaaah6.ukwest-01.azurewebsites.net"
+]
 
 # Application definition
 
