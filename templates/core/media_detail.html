@@ -180,14 +180,13 @@
             <div class="media-info">
                 <h1 class="media-title">{{ object.title }}</h1>
                 
-                <div class="media-stats">
-                    <div class="stats-item">
+                <div class="media-stats">                    <div class="stats-item">
                         <i class="fas fa-eye"></i>
                         <span>{{ object.views }} views</span>
                     </div>
                     <div class="stats-item">
                         <i class="fas fa-heart"></i>
-                        <span>{{ object.likes }} likes</span>
+                        <span>{{ object.likes.count }} likes</span>
                     </div>
                     <div class="stats-item">
                         <i class="fas fa-calendar-alt"></i>
@@ -285,18 +284,13 @@
             <!-- Related Media -->
             <div class="related-media">
                 <h4 class="mb-3">Related Media</h4>
-                
-                {% if related_media %}
+                  {% if related_media %}
                 <div class="row g-3">
                     {% for media in related_media %}
                     <div class="col-6">
                         <a href="{% url 'core:media_detail' media.id %}" class="text-decoration-none">
                             <div class="related-item">
-                                {% if media.media_type == 'image' %}
                                 <img src="{{ media.file.url }}" alt="{{ media.title }}">
-                                {% else %}
-                                <img src="{{ media.thumbnail.url }}" alt="{{ media.title }}">
-                                {% endif %}
                                 <div class="mt-2">
                                     <h6 class="text-truncate">{{ media.title }}</h6>
                                     <small class="text-muted">{{ media.creator.username }}</small>

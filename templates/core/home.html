@@ -314,12 +314,13 @@
         <div class="row align-items-center">
             <div class="col-lg-6 hero-content">
                 <h1 class="hero-title">Share Your Creative World</h1>
-                <p class="hero-subtitle">Upload, discover, and engage with amazing videos and images from creators worldwide.</p>
-                <div class="hero-cta">
+                <p class="hero-subtitle">Upload, discover, and engage with amazing videos and images from creators worldwide.</p>                <div class="hero-cta">
                     {% if user.is_authenticated %}
+                        {% if user.is_creator %}
                         <a href="{% url 'core:upload_media' %}" class="btn btn-light hero-btn me-3">
                             <i class="fas fa-upload me-2"></i>Upload Media
                         </a>
+                        {% endif %}
                         <a href="{% url 'core:media_list' %}" class="btn btn-outline-light hero-btn">Browse All</a>
                     {% else %}
                         <a href="{% url 'users:register' %}" class="btn btn-light hero-btn me-3">
@@ -343,8 +344,7 @@
         <a href="{% url 'core:media_list' %}?sort=trending" class="view-all-btn btn btn-sm btn-outline-primary">View All</a>
     </div>
     
-    <div class="row">
-        {% if trending_media %}
+    <div class="row">        {% if trending_media %}
             {% for media in trending_media %}
                 <div class="col-md-6 col-lg-3">
                     <div class="media-card">
@@ -353,15 +353,11 @@
                                 <i class="fas fa-fire"></i> Trending
                             </div>
                             <div class="media-type-badge">
-                                <i class="fas {% if media.media_type == 'video' %}fa-video{% else %}fa-image{% endif %}"></i>
-                                {{ media.media_type|title }}
+                                <i class="fas fa-image"></i>
+                                Media
                             </div>
                             <a href="{% url 'core:media_detail' media.id %}">
-                                {% if media.media_type == 'image' %}
-                                    <img src="{{ media.file.url }}" alt="{{ media.title }}">
-                                {% else %}
-                                    <img src="{{ media.thumbnail.url }}" alt="{{ media.title }}">
-                                {% endif %}
+                                <img src="{{ media.file.url }}" alt="{{ media.title }}">
                             </a>
                         </div>
                         <div class="card-body">
@@ -371,15 +367,14 @@
                             <div class="media-creator">
                                 <div class="avatar">{{ media.creator.username|first|upper }}</div>
                                 <span>{{ media.creator.username }}</span>
-                            </div>
-                            <div class="media-stats">
+                            </div>                            <div class="media-stats">
                                 <div>
                                     <i class="fas fa-eye"></i>
                                     <span>{{ media.views }}</span>
                                 </div>
                                 <div>
                                     <i class="fas fa-heart"></i>
-                                    <span>{{ media.likes }}</span>
+                                    <span>{{ media.likes.count }}</span>
                                 </div>
                                 <div>
                                     <i class="fas fa-comment"></i>
@@ -433,6 +428,7 @@
 </section>
 
 <!-- Join Section -->
+{% if not user.is_authenticated or user.is_creator %}
 <section class="container">
     <div class="join-section">
         <div class="container join-content">
@@ -457,6 +453,7 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- Latest Uploads Section -->
 <section class="container my-5">
@@ -466,21 +463,16 @@
     </div>
     
     <div class="row">
-        {% if latest_media %}
-            {% for media in latest_media %}
+        {% if latest_media %}            {% for media in latest_media %}
                 <div class="col-md-6 col-lg-3">
                     <div class="media-card">
                         <div class="card-img-container">
                             <div class="media-type-badge">
-                                <i class="fas {% if media.media_type == 'video' %}fa-video{% else %}fa-image{% endif %}"></i>
-                                {{ media.media_type|title }}
+                                <i class="fas fa-image"></i>
+                                Media
                             </div>
                             <a href="{% url 'core:media_detail' media.id %}">
-                                {% if media.media_type == 'image' %}
-                                    <img src="{{ media.file.url }}" alt="{{ media.title }}">
-                                {% else %}
-                                    <img src="{{ media.thumbnail.url }}" alt="{{ media.title }}">
-                                {% endif %}
+                                <img src="{{ media.file.url }}" alt="{{ media.title }}">
                             </a>
                         </div>
                         <div class="card-body">
@@ -495,10 +487,9 @@
                                 <div>
                                     <i class="fas fa-eye"></i>
                                     <span>{{ media.views }}</span>
-                                </div>
-                                <div>
+                                </div>                                <div>
                                     <i class="fas fa-heart"></i>
-                                    <span>{{ media.likes }}</span>
+                                    <span>{{ media.likes.count }}</span>
                                 </div>
                                 <div>
                                     <i class="fas fa-clock"></i>

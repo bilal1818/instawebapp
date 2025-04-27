@@ -72,10 +72,9 @@ def media_detail(request, pk):
     # Calculate average rating
     avg_rating = media.ratings.aggregate(Avg('score'))['score__avg']
     avg_rating = round(avg_rating, 1) if avg_rating else 0
-    
-    # Get related media based on category or creator
+      # Get related media based on creator only
     related_media = MediaContent.objects.filter(
-        Q(category=media.category) | Q(creator=media.creator),
+        creator=media.creator,
         is_active=True
     ).exclude(id=media.id).distinct().order_by('-upload_date')[:6]
     
